@@ -81,6 +81,42 @@ function ArrowIcon() {
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' })
+  const [formStatus, setFormStatus] = useState('idle')
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault()
+    setFormStatus('submitting')
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/jagdishpoojary41@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          _subject: `New Portfolio Message from ${formData.name}: ${formData.subject || 'General Inquiry'}`,
+          subject: formData.subject,
+          message: formData.message,
+          _template: 'table',
+          _captcha: 'false',
+        }),
+      })
+
+      const data = await response.json()
+      if (response.ok && (data.success === 'true' || data.success === true || response.status === 200)) {
+        setFormStatus('success')
+        setFormData({ name: '', email: '', subject: '', message: '' })
+      } else {
+        setFormStatus('error')
+      }
+    } catch (err) {
+      console.error('Contact form submission error:', err)
+      setFormStatus('error')
+    }
+  }
 
   useEffect(() => {
     const sections = ['home', 'about', 'work', 'skills', 'contact']
@@ -203,10 +239,108 @@ function App() {
 
         <section id="contact" className="contact section-pad">
           <div className="contact-card">
-            <div className="contact-kicker">05 / Let’s connect</div>
-            <h2>Have an idea?<br /><em>Let’s make it real.</em></h2>
-            <p>I’m open to entry-level software engineering opportunities, collaborations, and conversations about building useful things.</p>
-            <a className="button button-light" href={`mailto:${profile.email}`}>Start a conversation <ArrowIcon /></a>
+            <div className="contact-content-grid">
+              <div className="contact-info">
+                <div className="contact-kicker">05 / Let’s connect</div>
+                <h2>Have an idea?<br /><em>Let’s make it real.</em></h2>
+                <p>I’m open to entry-level software engineering opportunities, collaborations, and conversations about building useful things.</p>
+                <div className="contact-quick-links">
+                  <div className="quick-item">
+                    <span className="quick-label">Direct Email</span>
+                    <a href={`mailto:${profile.email}`} className="quick-value">{profile.email}</a>
+                  </div>
+                  <div className="quick-item">
+                    <span className="quick-label">Location</span>
+                    <span className="quick-value">{profile.location}</span>
+                  </div>
+                  <div className="quick-item">
+                    <span className="quick-label">Phone</span>
+                    <a href={`tel:${profile.phone}`} className="quick-value">{profile.phone}</a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="contact-form-container">
+                <form className="contact-form" onSubmit={handleContactSubmit}>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="contact-name">Your Name</label>
+                      <input
+                        id="contact-name"
+                        type="text"
+                        name="name"
+                        placeholder="e.g. John Doe"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        disabled={formStatus === 'submitting'}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="contact-email">Your Email</label>
+                      <input
+                        id="contact-email"
+                        type="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        disabled={formStatus === 'submitting'}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="contact-subject">Subject</label>
+                    <input
+                      id="contact-subject"
+                      type="text"
+                      name="subject"
+                      placeholder="Project inquiry / Job opportunity / Hello"
+                      required
+                      value={formData.subject}
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                      disabled={formStatus === 'submitting'}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="contact-message">Message</label>
+                    <textarea
+                      id="contact-message"
+                      name="message"
+                      rows="4"
+                      placeholder="Write your message here..."
+                      required
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      disabled={formStatus === 'submitting'}
+                    />
+                  </div>
+
+                  {formStatus === 'success' && (
+                    <div className="form-alert form-alert-success" role="alert">
+                      ✓ Thank you! Your message has been sent to {profile.email}. I will reply shortly.
+                    </div>
+                  )}
+
+                  {formStatus === 'error' && (
+                    <div className="form-alert form-alert-error" role="alert">
+                      ✕ Unable to send automatically right now. Please email directly at <a href={`mailto:${profile.email}?subject=${encodeURIComponent(formData.subject || 'Portfolio Inquiry')}&body=${encodeURIComponent(formData.message || '')}`}>{profile.email}</a>.
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="button button-light form-submit-btn"
+                    disabled={formStatus === 'submitting'}
+                  >
+                    {formStatus === 'submitting' ? 'Sending message...' : <>Send message <ArrowIcon /></>}
+                  </button>
+                </form>
+              </div>
+            </div>
             <div className="contact-orbit" aria-hidden="true" />
           </div>
           <div className="contact-footer"><span>{profile.location}</span><div className="contact-links"><a href={profile.linkedin} target="_blank" rel="noreferrer">LinkedIn <ArrowIcon /></a><a href={profile.github} target="_blank" rel="noreferrer">GitHub <ArrowIcon /></a><a href={`mailto:${profile.email}`}>Email <ArrowIcon /></a></div><span>© 2026 Jagdish Poojary</span></div>
